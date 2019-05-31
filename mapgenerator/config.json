@@ -1,0 +1,35 @@
+{
+  "biomes": [
+    {
+      "name": "Deep water",
+      "base_lvl": "0.05",
+      "color": "#081a59"
+    },
+    {
+      "name": "Water",
+      "base_lvl": "0.1",
+      "color": "#8b9bcb"
+    },
+    {
+      "name": "Sand",
+      "base_lvl": "0.2",
+      "color": "#e6c55c"
+    },
+    {
+      "name": "Grass",
+      "base_lvl": "0.3",
+      "color": "#88cc33"
+    },
+    {
+      "name": "Moutains",
+      "base_lvl": "0.7",
+      "color": "#5a4d41"
+    },
+    {
+      "name": "Snow",
+      "base_lvl": "0.9",
+      "color": "#fffafa"
+    }
+  ],
+  "max_octaves": "5"
+}
