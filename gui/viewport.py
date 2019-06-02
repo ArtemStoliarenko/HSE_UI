@@ -1,14 +1,18 @@
-from noise import pnoise2
 from PyQt5.Qt import \
     QWidget, \
     QPixmap, \
     QImage, \
     QLabel, \
-    QScrollArea, QHBoxLayout
+    QScrollArea, QHBoxLayout, QMouseEvent
 from PyQt5.QtWidgets import QSizePolicy
+from PyQt5.QtCore import pyqtSignal
+
+from mapgenerator.utils import biome_with_color
 
 
 class Viewport(QScrollArea):
+
+    mouse_moved = pyqtSignal(int, int, str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -25,10 +29,11 @@ class Viewport(QScrollArea):
         layout.addWidget(self.display_widget)
         layout.addStretch()
         widget.setLayout(layout)
+        self.col_map = bytearray()
+        self.dim = 0
         self.setWidget(widget)
         self.setWidgetResizable(True)
 
-    # TODO: Refactor wrt docstring
     def set_map(self, col_map: bytearray, dim: int) -> None:
         """
         Set colored map to draw.
@@ -38,11 +43,23 @@ class Viewport(QScrollArea):
         :param col_map: bytearray
         :return: None
         """
+        self.col_map = col_map
+        self.dim = dim
         pixmap = QPixmap.fromImage(QImage(col_map,
                                           dim,
                                           dim,
-                                          QImage.Format_Indexed8))
+                                          QImage.Format_RGB888))
         self.display_widget.setPixmap(pixmap)
+
+    def mouseMoveEvent(self, a0: QMouseEvent):
+        x = a0.x()
+        y = a0.y()
+        lin_coord = x * self.dim + y
+        rgb = self.col_map[lin_coord: lin_coord + 3]
+        color = f"#{hex(rgb[0])[2:]}{hex(rgb[1])[2:]}{hex(rgb[2])[2:]}"
+        biome = biome_with_color(color)
+        if biome:
+            self.mouse_moved.emit(x, y, biome)
 
 
 if __name__ == '__main__':
@@ -50,17 +67,24 @@ if __name__ == '__main__':
     from PyQt5.Qt import QApplication
     from time import time
 
+    from mapgenerator.gen_utils import generate_colored_map
+    from mapgenerator.utils import config
+
     app = QApplication(sys.argv)
     w = Viewport()
     w.setMinimumSize(700, 700)
-    shape = [512, 512]
+    colors = {biome["color"]: float(biome["base_lvl"]) for biome in config["biomes"]}
+    dim = 512
+    pers = 0.5
+    octaves = 1
     t = time()
-    hmap = bytearray([0 for _ in range(shape[0] * shape[1])])
-    for i in range(shape[0]):
-        for j in range(shape[1]):
-            n = pnoise2(i / 16, j / 16, repeatx=100, repeaty=100)
-            hmap[i * shape[1] + j] = int((n + 1) * 128)
-    w.set_map(hmap, shape[0])
+    col_map = generate_colored_map(dim=dim,
+                                   octaves=octaves,
+                                   persistence=pers,
+                                   repeatx=1024,
+                                   repeaty=1024,
+                                   colors=colors)
+    w.set_map(col_map, dim)
     print(time() - t)
     w.setVisible(True)
     sys.exit(app.exec())

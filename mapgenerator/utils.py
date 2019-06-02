@@ -24,6 +24,13 @@ def icons() -> dict:
     return {img: QPixmap(dir_path + img) for img in QDir(dir_path).entryList()}
 
 
+def biome_with_color(color: str) -> str:
+    for biome in config["biomes"]:
+        if biome["color"] == color:
+            return biome["name"]
+    return ""
+
+
 if __name__ == '__main__':
     import sys
     from PyQt5.Qt import QApplication
