@@ -1,3 +1,4 @@
+import numpy as np
 from PyQt5.Qt import \
     QWidget, \
     QPixmap, \
@@ -34,7 +35,7 @@ class Viewport(QScrollArea):
         self.setWidget(widget)
         self.setWidgetResizable(True)
 
-    def set_map(self, col_map: bytearray, dim: int) -> None:
+    def set_map(self, col_map: bytes, dim: int) -> None:
         """
         Set colored map to draw.
         Causes instant display
@@ -46,8 +47,8 @@ class Viewport(QScrollArea):
         self.col_map = col_map
         self.dim = dim
         pixmap = QPixmap.fromImage(QImage(col_map,
-                                          dim,
-                                          dim,
+                                          dim, dim,
+                                          dim * 3,
                                           QImage.Format_RGB888))
         self.display_widget.setPixmap(pixmap)
 

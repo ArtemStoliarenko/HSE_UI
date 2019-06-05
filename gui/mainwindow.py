@@ -7,16 +7,17 @@ from PyQt5.QtWidgets import \
     QMenuBar, \
     QAction, qApp
 from PyQt5.QtGui import QCloseEvent
+import numpy as np
 
 from gui.tabpanel import TabPanel
 from gui.viewport import Viewport
-from mapgenerator.gen_utils import generate_colored_map
+from mapgenerator.gen_utils import generate_colored_map, numpy_to_bytes
 from mapgenerator.utils import config
 
 
 # noinspection PyUnresolvedReferences
 class MainWindow(QMainWindow):
-    gen_submitted = pyqtSignal(bytearray, int)
+    gen_submitted = pyqtSignal(bytes, int)
 
     def __init__(self):
         super().__init__()
@@ -50,14 +51,16 @@ class MainWindow(QMainWindow):
     def _set_map(self, state: dict):
         dim = state["dim"]
         # TODO: load actual {color: height} dict from widgets
+        # TODO: add widget for scale
         colors = {biome["color"]: float(biome["base_lvl"]) for biome in config["biomes"]}
         hmap = generate_colored_map(dim=dim,
+                                    scale=0.5,
                                     octaves=state["octaves"],
                                     persistence=state["persistence"],
                                     repeatx=state["x_period"],
                                     repeaty=state["y_period"],
                                     colors=colors)
-        self.gen_submitted.emit(hmap, dim)
+        self.gen_submitted.emit(numpy_to_bytes(hmap), dim)
 
     # TODO: implement
     def _create_menu(self) -> QMenuBar:

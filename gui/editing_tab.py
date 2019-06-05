@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import \
     QWidget, \
     QLabel, \
     QComboBox, \
-    QSpinBox
+    QSpinBox, \
+    QVBoxLayout
 from PyQt5.QtGui import QIcon
 
 from gui.custom_widgets import CustomTab
@@ -16,6 +17,9 @@ class EditingTab(CustomTab):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        high_level_layout = QVBoxLayout()
+        container = QWidget()
+        container.setLayout(high_level_layout)
         main_widget = QWidget()
         layout = QGridLayout()
         #
@@ -38,7 +42,9 @@ class EditingTab(CustomTab):
         layout.addWidget(color_cb, 2, 1)
         #
         main_widget.setLayout(layout)
-        self.setWidget(main_widget)
+        high_level_layout.addWidget(main_widget)
+        high_level_layout.addStretch()
+        self.setWidget(container)
 
 
 if __name__ == '__main__':

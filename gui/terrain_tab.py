@@ -8,13 +8,15 @@ from PyQt5.QtWidgets import \
     QLabel, \
     QTableWidget, \
     QSizePolicy, \
-    QDoubleSpinBox, QHBoxLayout, QAbstractItemView
+    QDoubleSpinBox, \
+    QHBoxLayout, \
+    QAbstractItemView, QHeaderView
 from gui.custom_widgets import ColorButton, IndSliderWithDoubleSpinBox, CustomTab
 from mapgenerator.utils import config
 
 
 # noinspection PyUnresolvedReferences
-class TerrainTab(CustomTab):
+class TerrainTab(QWidget):
 
     lvl_changed = pyqtSignal(str, float)
     biome_disabled = pyqtSignal(str)
@@ -23,19 +25,19 @@ class TerrainTab(CustomTab):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.horizontalScrollBar().setEnabled(True)
+        # self.horizontalScrollBar().setEnabled(True)
         biomes = config["biomes"]
-        container = QWidget()
-        container_layout = QVBoxLayout()
-        container.setLayout(container_layout)
+        # container = QWidget()
+        container_layout = QHBoxLayout()
+        # container.setLayout(container_layout)
         terrain_tab = QTableWidget(len(biomes), 4)
         size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         terrain_tab.setSizePolicy(size_policy)
-        container.setSizePolicy(size_policy)
+        # container.setSizePolicy(size_policy)
         #
         terrain_tab.verticalHeader().hide()
         terrain_tab.setHorizontalHeaderLabels(["Enabled", "Biome", "Color", "Level"])
-        # terrain_tab.horizontalHeader().hide()
+        terrain_tab.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         #
         biomes = config["biomes"]
         for n, biome in enumerate(biomes):
@@ -72,7 +74,8 @@ class TerrainTab(CustomTab):
         terrain_tab.horizontalHeader().setSectionsClickable(False)
         container_layout.addWidget(terrain_tab)
         self.terrain_tab = terrain_tab
-        self.setWidget(container)
+        # self.setWidget(container)
+        self.setLayout(container_layout)
 
     def _set_row_state(self, row_num: int, state: bool):
         for col in range(1, self.terrain_tab.columnCount()):

@@ -1,6 +1,8 @@
 from noise import pnoise2
 from random import randint
 
+import numpy as np
+
 # TODO: add scale
 
 SQRT_2 = 2 ** 0.5
@@ -22,53 +24,70 @@ def _height_to_color(colors: dict, value: float) -> bytearray:
     return hex_to_rgb(color)
 
 
+def numpy_to_bytearray(arr: np.array) -> bytearray:
+    res = bytearray(arr.tobytes())
+    # print(f"Source shape: {arr.shape}")
+    # print(f"Res len: {len(res)}")
+    # print(f"Equals: {len(res) == arr.shape[0] * arr.shape[1] * arr.shape[2]}")
+    return res
+
+
+def numpy_to_bytes(arr: np.array) -> bytes:
+    return arr.tobytes()
+
+
+def colorize(hmap: np.array, colors: dict):
+    sorted_colors = sorted(colors.keys(), key=lambda x: colors[x])
+    col_hmap = np.zeros([*hmap.shape, 3], dtype="uint8")
+    col_hmap[:] = hex_to_rgb(sorted_colors[0])
+    for col in sorted_colors[1:]:
+        col_hmap[hmap >= colors[col]] = np.array(hex_to_rgb(col))
+    return col_hmap
+
+
 def generate_colored_map(dim: int,
+                         scale: float,
                          octaves: int,
                          persistence: float,
                          repeatx: int,
                          repeaty: int,
-                         colors: dict) -> bytearray:
-    hmap = bytearray([0 for _ in range(dim * dim * 3)])
-    lin_idx = 0
-    offset = randint(0, VARIANCE)
-    magic_const = 0.6
-    #
-    # debug_min = 2
-    # debug_max = -2
-    #
-    for i in range(dim):
-        for j in range(dim):
-            n = pnoise2(i / dim + offset,
-                        j / dim + offset,
-                        octaves=octaves,
-                        persistence=persistence,
-                        repeatx=repeatx,
-                        repeaty=repeaty)
-            normed_height = (n + magic_const) * magic_const
-            # debug_max = max(normed_height, debug_max)
-            # debug_min = min(normed_height, debug_min)
-            lin_idx += 3
-            rgb = _height_to_color(colors, normed_height)
-            hmap[lin_idx: lin_idx + 3] = rgb
-    # print(f"Max height: {debug_max}")
-    # print(f"Min height: {debug_min}")
-    return hmap
+                         colors: dict) -> np.array:
+    hmap = generate_height_map(dim=dim,
+                               scale=scale,
+                               octaves=octaves,
+                               persistence=persistence,
+                               repeatx=repeatx,
+                               repeaty=repeaty)
+    col_hmap = colorize(hmap, colors)
+    return col_hmap
 
 
 def generate_height_map(dim: int,
+                        scale: float,
                         octaves: int,
                         persistence: float,
                         repeatx: int,
-                        repeaty: int) -> bytearray:
-    hmap = bytearray([0 for _ in range(dim * dim)])
+                        repeaty: int) -> np.array:
+    hmap = np.zeros([dim, dim], dtype=float)
     offset = randint(0, VARIANCE)
+    scale_coef = 1 / dim * scale
     for i in range(dim):
         for j in range(dim):
-            n = pnoise2(i / dim + offset,
-                        j / dim + offset,
+            n = pnoise2(i * scale_coef + offset,
+                        j * scale_coef + offset,
                         octaves=octaves,
                         persistence=persistence,
                         repeatx=repeatx,
                         repeaty=repeaty)
-            hmap[i * dim + j] = int((n + 1) * 128)
+            hmap[i][j] = n
+    # Norming
+    min_h = np.min(hmap)
+    hmap = hmap + abs(min_h)
+    max_h = np.max(hmap)
+    norm_coef = 1 / max_h
+    hmap *= norm_coef
+    ### DEBUG
+    # print(f"New max: {np.max(hmap)}")
+    # print(f"New min: {np.min(hmap)}")
+    ###
     return hmap
