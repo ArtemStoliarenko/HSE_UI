@@ -1,12 +1,15 @@
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtWidgets import \
     QGroupBox, \
     QGridLayout, \
     QVBoxLayout, \
     QCheckBox, \
     QWidget, \
-    QLabel
-from gui.custom_widgets import ColorButton, SliderSpinBox, CustomTab
+    QLabel, \
+    QTableWidget, \
+    QSizePolicy, \
+    QDoubleSpinBox, QHBoxLayout, QAbstractItemView
+from gui.custom_widgets import ColorButton, IndSliderWithDoubleSpinBox, CustomTab
 from mapgenerator.utils import config
 
 
@@ -20,43 +23,69 @@ class TerrainTab(CustomTab):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        terrain_tab = QWidget()
-        tab_layout = QVBoxLayout()
-        terrain_tab.setLayout(tab_layout)
+        self.horizontalScrollBar().setEnabled(True)
         biomes = config["biomes"]
-        for biome in biomes:
-            biome_widget = QGroupBox()
+        container = QWidget()
+        container_layout = QVBoxLayout()
+        container.setLayout(container_layout)
+        terrain_tab = QTableWidget(len(biomes), 4)
+        size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        terrain_tab.setSizePolicy(size_policy)
+        container.setSizePolicy(size_policy)
+        #
+        terrain_tab.verticalHeader().hide()
+        terrain_tab.setHorizontalHeaderLabels(["Enabled", "Biome", "Color", "Level"])
+        # terrain_tab.horizontalHeader().hide()
+        #
+        biomes = config["biomes"]
+        for n, biome in enumerate(biomes):
             biome_name = biome["name"]
-            biome_widget.setTitle(biome_name)
-            layout = QGridLayout()
-            biome_widget.setLayout(layout)
             #
-            checkbox = QCheckBox("Enabled")
+            cb_container = QWidget()
+            cb_layout = QHBoxLayout()
+            cb_container.setLayout(cb_layout)
+            checkbox = QCheckBox()
             checkbox.setChecked(True)
-            checkbox.stateChanged.connect(self._cb_on_state_changed(biome_name))
-            layout.addWidget(checkbox, 0, 0)
+            checkbox.stateChanged.connect(self._cb_on_state_changed(biome_name, n))
+            cb_layout.addStretch(2)
+            cb_layout.addWidget(checkbox)
+            cb_layout.addStretch(2)
+            terrain_tab.setCellWidget(n, 0, cb_container)
             #
-            layout.addWidget(QLabel("Biome color"), 1, 0)
+            terrain_tab.setCellWidget(n, 1, QLabel(biome_name))
+            #
             color_button = ColorButton()
-            layout.addWidget(color_button, 1, 2)
-            color_button.setStyleSheet(f"background-color: {biome['color']};"
-                                       f"border:1px solid black;")
+            color_button.set_color(biome['color'])
             color_button.color_changed.connect(self._on_color_changed(biome_name))
+            terrain_tab.setCellWidget(n, 2, color_button)
             #
-            layout.addWidget(QLabel("Level:"), 2, 0)
-            ssb = SliderSpinBox()
-            ssb.set_value(float(biome["base_lvl"]))
-            layout.addWidget(ssb, 3, 0, 1, 4)
+            # lvl_sb = IndSliderWithDoubleSpinBox()
+            lvl_sb = QDoubleSpinBox()
+            lvl_sb.setRange(0, 1)
+            lvl_sb.setSingleStep(0.01)
+            lvl_sb.setValue(float(biome["base_lvl"]))
+            terrain_tab.setCellWidget(n, 3, lvl_sb)
             #
-            tab_layout.addWidget(biome_widget)
-        self.setWidget(terrain_tab)
+            terrain_tab.setFocusPolicy(Qt.NoFocus)
+        terrain_tab.resizeRowsToContents()
+        terrain_tab.setSelectionMode(QAbstractItemView.NoSelection)
+        terrain_tab.horizontalHeader().setSectionsClickable(False)
+        container_layout.addWidget(terrain_tab)
+        self.terrain_tab = terrain_tab
+        self.setWidget(container)
 
-    def _cb_on_state_changed(self, name):
+    def _set_row_state(self, row_num: int, state: bool):
+        for col in range(1, self.terrain_tab.columnCount()):
+            self.terrain_tab.cellWidget(row_num, col).setEnabled(state)
+
+    def _cb_on_state_changed(self, name: str, row_num: int):
         def handler(value):
             if value:
                 self.biome_enabled.emit(name)
+                self._set_row_state(row_num, True)
             else:
                 self.biome_disabled.emit(name)
+                self._set_row_state(row_num, False)
         return handler
 
     def _on_color_changed(self, name):

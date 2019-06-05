@@ -5,10 +5,10 @@ from random import randint
 
 SQRT_2 = 2 ** 0.5
 HALF_SQRT_2 = SQRT_2 / 2
-VARIANCE = 100
+VARIANCE = 1000
 
 
-def _hex_to_rgb(hex_color: str) -> bytearray:
+def hex_to_rgb(hex_color: str) -> bytearray:
     assert len(hex_color) == 7
     res = bytearray(3)
     res[0] = int(hex_color[1:3], base=16)
@@ -19,7 +19,7 @@ def _hex_to_rgb(hex_color: str) -> bytearray:
 
 def _height_to_color(colors: dict, value: float) -> bytearray:
     color = min(colors.keys(), key=lambda x: abs(colors[x] - value))
-    return _hex_to_rgb(color)
+    return hex_to_rgb(color)
 
 
 def generate_colored_map(dim: int,

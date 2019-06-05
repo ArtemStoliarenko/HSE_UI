@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import \
     QWidget, \
     QLabel, \
     QPushButton, \
-    QSpinBox
+    QSpinBox, QVBoxLayout
 
 from gui.custom_widgets import \
     IndicatedSlider, \
@@ -22,6 +22,9 @@ class HeightMapTab(CustomTab):
     def __init__(self, parent=None):
         super().__init__(parent)
         main_widget = QWidget()
+        high_level_layout = QVBoxLayout()
+        container = QWidget()
+        container.setLayout(high_level_layout)
         layout = QGridLayout()
         main_widget.setLayout(layout)
         # Map dimensions
@@ -63,8 +66,10 @@ class HeightMapTab(CustomTab):
         generate_button = QPushButton("Generate")
         generate_button.clicked.connect(self._on_submitted)
         layout.addWidget(generate_button, 5, 0, 2, 2)
-
-        self.setWidget(main_widget)
+        #
+        high_level_layout.addWidget(main_widget)
+        high_level_layout.addStretch(2)
+        self.setWidget(container)
 
     def _on_submitted(self):
         state = {
