@@ -70,7 +70,8 @@ def generate_height_map(dim: int,
                         repeaty: int) -> np.array:
     hmap = np.zeros([dim, dim], dtype=float)
     offset = randint(0, VARIANCE)
-    scale_coef = 1 / dim * scale
+    scale_coef = 0.5 / (dim * scale + 1)
+    print(scale_coef)
     for i in range(dim):
         for j in range(dim):
             n = pnoise2(i * scale_coef + offset,

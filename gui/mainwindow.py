@@ -51,10 +51,9 @@ class MainWindow(QMainWindow):
     def _set_map(self, state: dict):
         dim = state["dim"]
         # TODO: load actual {color: height} dict from widgets
-        # TODO: add widget for scale
         colors = {biome["color"]: float(biome["base_lvl"]) for biome in config["biomes"]}
         hmap = generate_colored_map(dim=dim,
-                                    scale=0.5,
+                                    scale=state["scale"],
                                     octaves=state["octaves"],
                                     persistence=state["persistence"],
                                     repeatx=state["x_period"],
