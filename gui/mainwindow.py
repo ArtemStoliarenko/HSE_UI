@@ -11,11 +11,10 @@ import numpy as np
 
 from gui.tabpanel import TabPanel
 from gui.viewport import Viewport
-from mapgenerator.gen_utils import generate_colored_map, numpy_to_bytes
+from mapgenerator.gen_utils import generate_height_map, numpy_to_bytes, colorize
 from mapgenerator.utils import config
 
 
-# noinspection PyUnresolvedReferences
 class MainWindow(QMainWindow):
     gen_submitted = pyqtSignal(bytes, int)
 
@@ -40,6 +39,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(splitter)
         # Setting up signals
         self.tab_panel.gen_submitted.connect(self._set_map)
+        self.tab_panel.terrain_state_changed.connect(self.update_col_map)
         self.gen_submitted.connect(self.viewport.set_map)
         #
         central_widget.setLayout(layout)
@@ -47,20 +47,29 @@ class MainWindow(QMainWindow):
         #
         self.setMenuBar(self._create_menu())
         self._create_status_bar()
+        #
+        self.hmap = None
 
     def _set_map(self, height_state: dict):
         dim = height_state["dim"]
         terr_state = self.tab_panel.terrain_state()
         colors = {terr_state[biome]["color"]: terr_state[biome]["level"]
-                  for biome in terr_state}
-        hmap = generate_colored_map(dim=dim,
-                                    scale=height_state["scale"],
-                                    octaves=height_state["octaves"],
-                                    persistence=height_state["persistence"],
-                                    repeatx=height_state["x_period"],
-                                    repeaty=height_state["y_period"],
-                                    colors=colors)
-        self.gen_submitted.emit(numpy_to_bytes(hmap), dim)
+                  for biome in terr_state if terr_state[biome]["enabled"]}
+        self.hmap = generate_height_map(dim=dim,
+                                        scale=height_state["scale"],
+                                        octaves=height_state["octaves"],
+                                        persistence=height_state["persistence"],
+                                        repeatx=height_state["x_period"],
+                                        repeaty=height_state["y_period"])
+        col_map = colorize(self.hmap, colors)
+        self.gen_submitted.emit(numpy_to_bytes(col_map), dim)
+
+    def update_col_map(self, terr_state: dict):
+        if self.hmap is not None:
+            colors = {terr_state[biome]["color"]: terr_state[biome]["level"]
+                      for biome in terr_state if terr_state[biome]["enabled"]}
+            col_map = colorize(self.hmap, colors)
+            self.gen_submitted.emit(numpy_to_bytes(col_map), self.hmap.shape[0])
 
     # TODO: implement
     def _create_menu(self) -> QMenuBar:

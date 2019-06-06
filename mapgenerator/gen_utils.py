@@ -37,8 +37,10 @@ def numpy_to_bytes(arr: np.array) -> bytes:
 
 
 def colorize(hmap: np.array, colors: dict):
-    sorted_colors = sorted(colors.keys(), key=lambda x: colors[x])
     col_hmap = np.zeros([*hmap.shape, 3], dtype="uint8")
+    if not colors:
+        return col_hmap
+    sorted_colors = sorted(colors.keys(), key=lambda x: colors[x])
     col_hmap[:] = hex_to_rgb(sorted_colors[0])
     for col in sorted_colors[1:]:
         col_hmap[hmap >= colors[col]] = np.array(hex_to_rgb(col))

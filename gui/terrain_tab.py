@@ -75,6 +75,7 @@ class TerrainTab(QWidget):
             lvl_sb.setRange(0, 1)
             lvl_sb.setSingleStep(0.01)
             lvl_sb.setValue(float(biome["base_lvl"]))
+            lvl_sb.valueChanged.connect(self._on_lvl_changed(biome_name))
             terrain_tab.setCellWidget(n, 3, lvl_sb)
             self.lvl_selectors.append(lvl_sb)
             #
@@ -88,10 +89,10 @@ class TerrainTab(QWidget):
         self.state = {}
         self.update_state()
         #
-        self.lvl_changed.connect(self.emit_state)
-        self.biome_color_changed.connect(self.emit_state)
-        self.biome_enabled.connect(self.emit_state)
-        self.biome_disabled.connect(self.emit_state)
+        # self.lvl_changed.connect(self.emit_state)
+        # self.biome_color_changed.connect(self.emit_state)
+        # self.biome_enabled.connect(self.emit_state)
+        # self.biome_disabled.connect(self.emit_state)
 
     def _set_row_state(self, row_num: int, state: bool):
         for col in range(1, self.terrain_tab.columnCount()):
@@ -107,18 +108,21 @@ class TerrainTab(QWidget):
                 self.biome_disabled.emit(name)
                 self.state[name]["enabled"] = False
                 self._set_row_state(row_num, False)
+            self.settings_updated.emit(self.state)
         return handler
 
     def _on_color_changed(self, name):
         def handler(value):
             self.state[name]["color"] = value
             self.biome_color_changed.emit(name, value)
+            self.settings_updated.emit(self.state)
         return handler
 
     def _on_lvl_changed(self, name):
         def handler(value):
             self.state[name]["level"] = value
             self.lvl_changed.emit(name, value)
+            self.settings_updated.emit(self.state)
         return handler
 
     def color_height_dict(self) -> dict:
@@ -139,6 +143,7 @@ class TerrainTab(QWidget):
 
     def emit_state(self, *args):
         self.settings_updated.emit(self.state)
+
 
 
 if __name__ == '__main__':
