@@ -48,16 +48,17 @@ class MainWindow(QMainWindow):
         self.setMenuBar(self._create_menu())
         self._create_status_bar()
 
-    def _set_map(self, state: dict):
-        dim = state["dim"]
-        # TODO: load actual {color: height} dict from widgets
-        colors = {biome["color"]: float(biome["base_lvl"]) for biome in config["biomes"]}
+    def _set_map(self, height_state: dict):
+        dim = height_state["dim"]
+        terr_state = self.tab_panel.terrain_state()
+        colors = {terr_state[biome]["color"]: terr_state[biome]["level"]
+                  for biome in terr_state}
         hmap = generate_colored_map(dim=dim,
-                                    scale=state["scale"],
-                                    octaves=state["octaves"],
-                                    persistence=state["persistence"],
-                                    repeatx=state["x_period"],
-                                    repeaty=state["y_period"],
+                                    scale=height_state["scale"],
+                                    octaves=height_state["octaves"],
+                                    persistence=height_state["persistence"],
+                                    repeatx=height_state["x_period"],
+                                    repeaty=height_state["y_period"],
                                     colors=colors)
         self.gen_submitted.emit(numpy_to_bytes(hmap), dim)
 

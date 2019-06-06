@@ -9,7 +9,8 @@ from PyQt5.QtWidgets import \
     QSpinBox, \
     QHBoxLayout, \
     QScrollArea, \
-    QSizePolicy, QStackedLayout, QStackedWidget
+    QSizePolicy, \
+    QStackedWidget
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QMouseEvent, QFocusEvent, QPalette
 
@@ -175,6 +176,8 @@ class ColorButton(QPushButton):
                                f"border:1px solid rgb(0, 0, 0);")
             self.color_changed.emit(new_color.name())
 
+    def color(self) -> str:
+        return self.palette().color(QPalette.Background).name()
 
 # noinspection PyUnresolvedReferences
 class DupSpinbox(QWidget):

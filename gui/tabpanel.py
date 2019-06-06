@@ -9,7 +9,7 @@ from gui.editing_tab import EditingTab
 
 class TabPanel(QTabWidget):
 
-    lvl_changed = pyqtSignal(str, float)
+    terrain_state_changed = pyqtSignal(dict)
     gen_submitted = pyqtSignal(dict)
 
     def __init__(self, parent=None):
@@ -20,11 +20,15 @@ class TabPanel(QTabWidget):
         self.editing_tab = EditingTab()
         #
         self.heightmap_tab.gen_submitted.connect(self.gen_submitted)
+        self.terrain_tab.settings_updated.connect(self.terrain_state_changed)
         #
         self.addTab(self.heightmap_tab, "Generation")
         self.addTab(self.terrain_tab, "Terrain")
         self.addTab(self.editing_tab, "Editing")
         self.addTab(self.assets_tab, "Assets")
+
+    def terrain_state(self) -> dict:
+        return self.terrain_tab.state
 
 
 if __name__ == '__main__':
